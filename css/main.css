@@ -1,0 +1,12 @@
+.loc-bar {
+    width:100%;
+    font-size: 2em;
+}
+
+.list-menu {
+    width:25%;
+    font-size: 2em;
+    background-color: red;
+    float: left;
+}
+
