@@ -1,6 +1,9 @@
-//  MODEL
+//  GLOBAL FUNCTIONS / VARIABLES
 // ==================================================
 
+
+//  MODEL
+// ==================================================
 var locations = [
     {
         title: "Home",
@@ -19,20 +22,20 @@ var locations = [
     }
 ];
 
+//Default location where the map is initialized & centered.
+var defaultLoc = {lat: locations[0].lat, lng: locations[0].lng};
+
+var mapOptions = {
+    center: defaultLoc,
+    zoom: 12
+};
+
 //  GOOGLE MAP
 // ==================================================
-
 var initMap = function() {
     var map;
     var marker;
-
-    //Default location where the map is initialized & centered.
-    var defaultLoc = {lat: locations[0].lat, lng: locations[0].lng};
     var mapElement = document.getElementById('map');
-    var mapOptions = {
-        center: defaultLoc,
-        zoom: 12
-    };
 
     //Create map using Google api.
     map = new google.maps.Map(mapElement, mapOptions);
@@ -67,11 +70,32 @@ var ViewModel = {
 
         this.currentLoc = ko.observable(this.locList()[0]);
 
+        // FILTER RESULTS
+        // http://www.knockmeout.net/2011/04/utility-functions-in-knockoutjs.html
+        // ==================================================
+
+        // Create utility function TODO: Move into Utility section?
+        var stringStartsWith = function (string, startsWith) {
+            string = string || "";
+            if (startsWith.length > string.length)
+                return false;
+            return string.substring(0, startsWith.length) === startsWith;
+        };
+
+        this.listSearch = ko.observable('');
+
+        this.filteredRecords = ko.computed(function() {
+            var filter = self.listSearch().toLowerCase();
+            return ko.utils.arrayFilter(self.locList(), function(item){
+                return (self.listSearch().length == 0 || stringStartsWith(item.title().toLowerCase(), filter))
+            });
+        });
 
         //TODO: this needs to be fixed below.
-        this.setLoc = function (clickedLoc) {
+        self.setLoc = function (clickedLoc) {
             ViewModel.init().currentLoc(clickedLoc);
             console.log(this.init().currentLoc().title());
+            console.log(this.init().currentLoc().lat());
 
             //TODO: What happens after it's clicked?
         };
@@ -81,7 +105,7 @@ var ViewModel = {
 
 google.maps.event.addDomListener(window, 'load', initMap);
 ko.applyBindings(new ViewModel.init());
-var app = new ViewModel.init();
+//var app = new ViewModel.init();
 
 //  NEED TO CLEAN UP CODE BELOW
 // ==================================================
