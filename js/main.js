@@ -1,5 +1,3 @@
-//  GLOBAL FUNCTIONS / VARIABLES
-// ==================================================
 
 
 //  MODEL
@@ -16,6 +14,11 @@ var locations = [
         lng: -122.3308333
     },
     {
+        title: "Store",
+        lat: 47.6363889,
+        lng: -122.3208333
+    },
+    {
         title: "Work",
         lat: 47.5563889,
         lng: -122.3308333
@@ -23,7 +26,7 @@ var locations = [
 ];
 
 //Default location where the map is initialized & centered.
-var defaultLoc = {lat: locations[0].lat, lng: locations[0].lng};
+var defaultLoc = {lat: locations[0].lat, lng: locations[0].lng, title: "Default & Boring"};
 
 var mapOptions = {
     center: defaultLoc,
@@ -40,14 +43,51 @@ var initMap = function() {
     //Create map using Google api.
     map = new google.maps.Map(mapElement, mapOptions);
 
-    //Create a marker and set its position.
-    var markerCurrent = {
-        //map: map,
-        position: {lat: app.currentLoc().lat(), lng: app.currentLoc().lng()},
-        title: app.currentLoc().title()
+
+    // Default Marker
+    //==================================================
+    var markerDefault = {
+
+        //Calling defaultLoc from model
+        position: {
+            lat: defaultLoc.lat,
+            lng: defaultLoc.lng
+        },
+        title: defaultLoc.title
     };
-    marker = new google.maps.Marker(markerCurrent);
+
+    marker = new google.maps.Marker(markerDefault);
     marker.setMap(map);
+
+    // All Markers in Model
+    //==================================================
+    //Putting all markers on the map
+    //for (var i = 0; i < locations.length; i ++) {
+    //    var markersFromList = {
+    //        position: {
+    //            lat: locations[i].lat,
+    //            lng: locations[i].lng
+    //        },
+    //        title: locations[i].title
+    //    };
+    //    marker = new google.maps.Marker(markersFromList);
+    //    marker.setMap(map);
+    //}
+
+    // Clicked Marker
+    //==================================================
+    //var markerCurrent = {
+    //
+    //    //Calling defaultLoc from model
+    //    position: {
+    //        lat: ViewModel.init().currentLoc().lat(),
+    //        lng: ViewModel.init().currentLoc().lng()
+    //    },
+    //    title: ViewModel.init().currentLoc().title()
+    //};
+    //
+    //marker = new google.maps.Marker(markerDefault);
+    //marker.setMap(map);
 };
 
 //  VIEW-MODEL
@@ -62,12 +102,15 @@ var ViewModel = {
     init: function () {
         var self = this; // Using self to access outer functions.
 
-        this.locList = ko.observableArray([]);
+        this.locList = ko.observableArray([]); //Initialize array of locations
 
+        // Take the locations model, filter it through GoogleMarker function (make each property observable),
+        // and add to the array of locations
         locations.forEach(function (loc) {
             self.locList.push(new GoogleMarker(loc));
         });
 
+        // Set the default current location to the 1st one.
         this.currentLoc = ko.observable(this.locList()[0]);
 
         // FILTER RESULTS
@@ -82,57 +125,32 @@ var ViewModel = {
             return string.substring(0, startsWith.length) === startsWith;
         };
 
-        this.listSearch = ko.observable('');
+        this.listSearch = ko.observable("");
 
         this.filteredRecords = ko.computed(function() {
             var filter = self.listSearch().toLowerCase();
             return ko.utils.arrayFilter(self.locList(), function(item){
-                return (self.listSearch().length == 0 || stringStartsWith(item.title().toLowerCase(), filter))
+                return (self.listSearch().length == 0 || stringStartsWith(item.title().toLowerCase(), filter));
             });
         });
 
-        //TODO: this needs to be fixed below.
-        self.setLoc = function (clickedLoc) {
-            ViewModel.init().currentLoc(clickedLoc);
-            console.log(this.init().currentLoc().title());
-            console.log(this.init().currentLoc().lat());
+        // Capture clicks below.  TODO: This can be moved to a 'Update' object.
+        this.setLoc = function (clickedLoc) {
+            self.currentLoc(clickedLoc);
 
-            //TODO: What happens after it's clicked?
+
+
+
+            //Debug
+            console.log("Clicked Title = " + clickedLoc.title());
+            console.log("Clicked Lat = " + clickedLoc.lat());
+            console.log("Clicked Lng = " + clickedLoc.lng());
+            console.log("Current Title = " + self.currentLoc().title());
+            console.log("Current Lat = " + self.currentLoc().lat());
+            console.log("Current Lng = " + self.currentLoc().lng());
         };
-
     }
 };
 
 google.maps.event.addDomListener(window, 'load', initMap);
-ko.applyBindings(new ViewModel.init());
-//var app = new ViewModel.init();
-
-//  NEED TO CLEAN UP CODE BELOW
-// ==================================================
-
-//var ViewModel = {
-//    init: function() {
-//        var self = this; // Using self to access outer functions.
-//
-//        this.locList = ko.observableArray([]);
-//
-//        locations.forEach(function (loc) {
-//            self.locList.push(new GoogleMarker(loc));
-//        });
-//
-//        this.currentLoc = ko.observable(this.locList()[0]);
-//
-//        //console.log(ViewModel.update());
-//        //this.update();
-//    },
-//    update: function() {
-//        var self = this; // Using self to access outer functions.
-//
-//        this.setLoc = function (clickedLoc) {
-//            ViewModel.init().currentLoc(clickedLoc);
-//            console.log(this.init().currentLoc().title());
-//
-//            //What happens after it's clicked?
-//        };
-//    }
-//};
+ko.applyBindings(new ViewModel.init());  //I forgot why this is needed vs just "ViewModel.init()";
